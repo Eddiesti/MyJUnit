@@ -3,30 +3,25 @@ package ru.otus;
 import ru.otus.annotations.After;
 import ru.otus.annotations.Before;
 import ru.otus.annotations.Test;
-import ru.otus.test.TestClass;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath;
 
-public class ReflectionHolder {
-    private List<Method> beforeList = new ArrayList<Method>();
-    private List<Method> testList = new ArrayList<Method>();
-    private List<Method> afterList = new ArrayList<Method>();
+public class TestExecutor {
+    private ListStores listStores = new ListStores();
 
     public void testByClass(Class clazz) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Object object = clazz.getDeclaredConstructor().newInstance();
         java.lang.reflect.Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
             addMethod(method);
         }
-        for (Method method : testList) {
-            for (Method method1 : beforeList) {
+        for (Method method : listStores.getTestList()) {
+            Object object = clazz.getDeclaredConstructor().newInstance();
+            for (Method method1 : listStores.getBeforeList()) {
                 try {
                     method1.invoke(object);
                 } catch (Exception e) {
@@ -38,7 +33,7 @@ public class ReflectionHolder {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            for (Method method2 : afterList) {
+            for (Method method2 : listStores.getAfterList()) {
                 try {
                     method2.invoke(object);
                 } catch (Exception e) {
@@ -60,11 +55,11 @@ public class ReflectionHolder {
 
     private void addMethod(Method method) {
         if (method.isAnnotationPresent(Before.class)) {
-            beforeList.add(method);
+            listStores.getBeforeList().add(method);
         } else if (method.isAnnotationPresent(Test.class)) {
-            testList.add(method);
+            listStores.getTestList().add(method);
         } else if (method.isAnnotationPresent(After.class)) {
-            afterList.add(method);
+            listStores.getAfterList().add(method);
         }
     }
 }
